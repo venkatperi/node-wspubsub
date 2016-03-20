@@ -35,5 +35,19 @@ describe "WebSocketPubSub", ->
       data = command: "publish", channel: "test", message: message 
       client2.send JSON.stringify(data)
       
+  it "close client 1", ->
+    client1.close()
+ 
+  it "client 2 publishes again, but no one receives the message ", (done) ->
+    message = "this is a test"
+    
+    client1.on "message", (msg) ->
+      msg.should.not.equal message 
+      done()
+        
+    data = command: "publish", channel: "test", message: message 
+    client2.send JSON.stringify(data)
+    setTimeout done, 1000
+      
   it "stop the server", ->
     server.stop()

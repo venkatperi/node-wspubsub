@@ -7,7 +7,7 @@ module.exports = class WebSocketPubSub
     @host = opts.host or conf.get "host" 
     @port = opts.port or conf.get "port"
     @path = opts.path or conf.get "path"
-    @connections = []
+    @connections = new Set()
     @subscriptions = {}
 
   start : =>
@@ -16,10 +16,10 @@ module.exports = class WebSocketPubSub
     @server = new WebSocketServer host: @host, port: @port, path: @path
 
     @server.on "connection", (conn) =>
-      @connections.push conn
+      @connections.add conn
       conn.on "close", =>
-        idx = @connections.indexOf conn
-        @connections.splice(idx, 1) unless idx == -1
+        conns.delete conn for own channel, conns of @subscriptions  
+        @connections.delete conn           
         
       conn.on "message", (message) => @handle conn, message
 
@@ -32,6 +32,7 @@ module.exports = class WebSocketPubSub
   handle: (conn, message) =>
     return unless @server
 
+    console.log message
     message = JSON.parse message if typeof(message) == "string"
     unless message.command?
       console.log "message has no command #{message}" 
@@ -50,8 +51,8 @@ module.exports = class WebSocketPubSub
       return
       
     for c in message.channels
-      @subscriptions[c] = [] unless @subscriptions[c]?
-      @subscriptions[c].push conn unless @subscriptions[c].indexOf(conn) >= 0
+      @subscriptions[c] = new Set() unless @subscriptions[c]?
+      @subscriptions[c].add conn 
       
   __UNSUBSCRIBE: (conn, message) =>
     unless message.channels?.length > 0
@@ -68,11 +69,10 @@ module.exports = class WebSocketPubSub
       console.log "#{message.command}: missing channel"
       return
       
-    data = message.message
-    opts = {}
-    unless typeof(data) == "string"
-      opts.binary = true
-      opts.mask = true
+    data = channel: message.channel, message: message.message
+    data = JSON.stringify data
 
+    #console.log "#{message.channel} has #{@subscriptions[message.channel].size} subscribers"
     return unless @subscriptions[message.channel]?
-    c.send data, opts for c in @subscriptions[message.channel]
+    @subscriptions[message.channel].forEach (c) =>
+      c.send data
