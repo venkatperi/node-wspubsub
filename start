@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ ! -f ~/.forever/pids/wspubsub.pid ]; then 
+  mkdir -p logs
+  forever start --uid "wspubsub"  -p . -a -l logs/forever.log -o logs/out.log -e logs/err.log -c coffee app.coffee start
+fi
