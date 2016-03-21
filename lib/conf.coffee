@@ -2,7 +2,7 @@ nconf = require 'nconf'
 Q = require 'q'
 
 HOME_DIR = process.env.HOME
-nconf.file file : "./server.config"
+nconf.file file : "./app.conf"
 
 module.exports = exports =
   nconf : nconf

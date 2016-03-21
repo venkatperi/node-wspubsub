@@ -32,7 +32,6 @@ module.exports = class WebSocketPubSub
   handle: (conn, message) =>
     return unless @server
 
-    console.log message
     message = JSON.parse message if typeof(message) == "string"
     unless message.command?
       console.log "message has no command #{message}" 
