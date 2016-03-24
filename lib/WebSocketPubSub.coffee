@@ -1,77 +1,61 @@
 conf = require "./conf"
 WebSocket = require 'ws'
 WebSocketServer = WebSocket.Server
+Channel = require "./Channel"
+Log = require "./Log"
+TAG = Log.makeTag __filename
 
 module.exports = class WebSocketPubSub
+  
   constructor : ( opts = {} ) ->
-    @host = opts.host or conf.get "host" 
-    @port = opts.port or conf.get "port"
-    @path = opts.path or conf.get "path"
-    @connections = new Set()
-    @subscriptions = {}
-
-  start : =>
+    @channels = {}
+    for p in ["host", "port", "path"]
+      @[p] = opts[p] or conf.get p
+      throw new Error "missing option: #{p}" unless @[p]?
+      
     @url = "ws://#{@host}:#{@port}#{@path}"
-    console.log "starting Websocket pubsub server at: #{@url}"
+       
+  start : =>
+    Log.i TAG, "starting wspubsub server at: #{@url}"
     @server = new WebSocketServer host: @host, port: @port, path: @path
 
     @server.on "connection", (conn) =>
-      @connections.add conn
-      conn.on "close", =>
-        conns.delete conn for own channel, conns of @subscriptions  
-        @connections.delete conn           
-        
-      conn.on "message", (message) => @handle conn, message
+      Log.d TAG, "got connection: #{conn}"
+      
+      conn.on "message", (message) =>
+        try  
+          @handle conn, message
+        catch err
+          Log.e TAG, "error: #{err}"
 
   stop: =>
-    @subscriptions = {}
-    c.close() for c in @connections
+    Log.i TAG, "stopping wspubsub server"
     @server.close()
-    @server = null
+    @server = {}
     
   handle: (conn, message) =>
-    return unless @server
-
+    Log.d TAG, "command: #{message}"
+  
     message = JSON.parse message if typeof(message) == "string"
-    unless message.command?
-      console.log "message has no command #{message}" 
-      return
+    throw new Error "missing command: #{JSON.stringify message}" unless message.command? 
     
     message.command = message.command.toUpperCase()
     handler = @["__#{message.command}"]
-    unless handler?
-      console.log "bad command: #{message.command}" 
-      return
+    throw new Error "bad command: #{message.command}" unless handler? 
     handler conn, message
     
   __SUBSCRIBE: (conn, message) =>
-    unless message.channels?.length > 0
-      console.log "#{message.command} command has no channels"
-      return
-      
-    for c in message.channels
-      @subscriptions[c] = new Set() unless @subscriptions[c]?
-      @subscriptions[c].add conn 
-      
+    throw new Error "#{message.command} command has no channels" unless message.channels?.length > 0
+    @channel(c).subscribe conn for c in message.channels
+       
   __UNSUBSCRIBE: (conn, message) =>
-    unless message.channels?.length > 0
-      console.log "#{message.command} command has no channels"
-      return
+    throw new Error "#{message.command} command has no channels" unless message.channels?.length > 0
+    @channel(c).unsubscribe conn for c in message.channels
+    
+  __PUBLISH: (conn, message) =>      
+    throw new Error "#{message.command}: missing channel" unless message.channel? 
+    @channel(message.channel).publish message.message      
       
-    for c in message.channels
-      return unless @subscriptions[c]?
-      idx = @subscriptions[c].indexOf(conn)
-      @subscriptions[c].splice(idx, 1) unless idx < 0
-   
-  __PUBLISH: (conn, message) =>
-    unless message.channel? 
-      console.log "#{message.command}: missing channel"
-      return
-      
-    data = channel: message.channel, message: message.message
-    data = JSON.stringify data
-
-    #console.log "#{message.channel} has #{@subscriptions[message.channel].size} subscribers"
-    return unless @subscriptions[message.channel]?
-    @subscriptions[message.channel].forEach (c) =>
-      c.send data
+  channel: (name) =>
+    @channels[name] = new Channel name: name unless @channels[name]?
+    @channels[name]

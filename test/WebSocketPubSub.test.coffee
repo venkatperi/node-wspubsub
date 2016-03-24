@@ -29,7 +29,9 @@ describe "WebSocketPubSub", ->
     client2 = new WebSocket url
     client2.on "open", ->
       client1.on "message", (msg) ->
-        msg.should.equal message 
+        msg = JSON.parse msg
+        msg.channel.should.equal "test" 
+        msg.message.should.equal message 
         done()
         
       data = command: "publish", channel: "test", message: message 
