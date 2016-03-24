@@ -1,6 +1,6 @@
 should = require( "should" )
 assert = require( "assert" )
-WebSocketPubSub = require '../lib/WebSocketPubSub'
+WSPubSub = require '../'
 WebSocket = require "ws"
 
 server = {}
@@ -11,9 +11,9 @@ port = 10018
 path = "/"
 url = "ws://#{host}:#{port}#{path}"
 
-describe "WebSocketPubSub", ->
+describe "WSPubSub", ->
   it "start the server", ->
-    server = new WebSocketPubSub(host: host, port: port)
+    server = new WSPubSub(host: host, port: port)
     server.start()
 
   it "client 1 can subscribe to a channel", (done) ->
@@ -30,7 +30,7 @@ describe "WebSocketPubSub", ->
     client2.on "open", ->
       client1.on "message", (msg) ->
         msg = JSON.parse msg
-        msg.channel.should.equal "test" 
+        msg.channel.should.equal "TEST"
         msg.message.should.equal message 
         done()
         

@@ -1,16 +1,10 @@
 {
-  "name": "wsserver",
+  "name": "node-wspubsub",
   "version": "0.1.0",
   "preferGlobal": false,
-  "description": "Simple WebSockets pubsub server",
+  "description": "Simple nodejs WebSockets pubsub server",
   "dependencies": {
-    "moment": "^2.12.0",
-    "nconf": "^0.7.1",
-    "nomnom": "^1.8.1",
     "q": "^1.4.1",
-    "underscore": "^1.8.3",
-    "underscore.string": "^3.3.4",
-    "winston": "^2.2.0",
     "ws": "^1.0.1"
   },
   "engines": {
@@ -18,7 +12,7 @@
     "npm": ">= 1.0.0"
   },
   "bundleDependencies": [],
-  "main": "lib/cli.coffee",
+  "main": "index.coffee",
   "devDependencies": {
     "coffee-script": "^1.8.0",
     "coffeeify": "~0.7.0",

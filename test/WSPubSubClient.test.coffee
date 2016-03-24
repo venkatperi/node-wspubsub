@@ -1,20 +1,26 @@
 should = require( "should" )
 assert = require( "assert" )
-WebSocketPubSub = require '../lib/WebSocketPubSub'
-WSPubSubClient = require '../lib/WSPubSubClient'
+WSPubSub = require '..'
+WSPubSubClient = WSPubSub.Client
 WebSocket = require "ws"
 
 host = "localhost"
 port = 10018
 path = "/"
 url = "ws://#{host}:#{port}#{path}"
-server = new WebSocketPubSub(host: host, port: port)
-server.start()
+server = undefined
 client1 = undefined
 client2 = undefined
 
 describe "WSPubSubClient", ->
 
+  before ->
+    server = new WSPubSub(host: host, port: port)
+    server.start()
+    
+  after ->
+    server.stop()
+    
   beforeEach ->
     client1.close() if client1?
     
@@ -39,13 +45,13 @@ describe "WSPubSubClient", ->
     
     client1 = new WSPubSubClient name: "client1d", url: url
     client1.on "open", ->
+      client1.on "message", (msg) ->
+        console.log "here"
+        msg.channel.should.equal "TEST"
+        msg.message.should.equal message
+        done()
       client1.subscribe "test"
+      
       client2 = new WSPubSubClient name: "client2", url: url
       client2.on "open", ->
-        client1.on "message", (msg) ->
-          console.log "here"
-          msg.channel.should.equal "TEST" 
-          msg.message.should.equal message 
-          done()
-          
         client2.publish "test", message

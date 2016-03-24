@@ -1,43 +1,41 @@
-Log = require "./Log"
-TAG = Log.makeTag __filename
+Log = require("node-log")(__filename)
+Log.level = "debug"
 
 module.exports = class Channel
 
-  subscriptions: new Set()
-  recent: []
-
-  constructor: ({@name, @retain = 10} ) ->
+  constructor : ( {@name, @retain = 10} ) ->
     throw new Error "name missing" unless @name?
     @name = @name.toUpperCase()
-    Log.i TAG, "creating channel: #{@name}"
+    Log.i "creating channel: #{@name}"
 
-  subscribe: (connection) =>
-    Log.d TAG, "subscribe[#{@name}]: #{connection}"
+    @subscriptions = new Set()
+    @recent = []
+
+  subscribe : ( connection ) =>
+    Log.d "subscribe[#{@name}]: #{connection}"
 
     @subscriptions.add connection
-
     connection.on "close", => @unsubscribe connection
+    @send connection, message for message in @recent
 
-    #send any recent messages
-    for message in @recent
-      message = JSON.stringify message unless typeof(message) == "string"
-      connection.send message
-
-  unsubscribe: (connection) =>
-    Log.d TAG, "unsubscribe[#{@name}]: #{connection}"
+  unsubscribe : ( connection ) =>
+    Log.d "unsubscribe[#{@name}]: #{connection}"
     @subscriptions.delete connection
 
-  sendAll: (message) =>
+  send : ( connection, message ) =>
     message = JSON.stringify message unless typeof(message) == "string"
-    @subscriptions.forEach (conn) =>
-      conn.send message
+    connection.send message
 
-  publish: (message) =>
-    Log.d TAG, "publishing on #{@name}: #{message}"
-    data = channel: @name, message: message
+  sendAll : ( message ) =>
+    @subscriptions.forEach ( conn ) =>
+      @send conn, message
+
+  publish : ( message ) =>
+    Log.d "publishing on #{@name}: #{message}"
+    data = channel : @name, message : message
 
     if @retain?
       @recent.push data
-      @recent.splice(0,1) if @recent.length > @retain
+      @recent.splice( 0, 1 ) if @recent.length > @retain
 
     @sendAll data
