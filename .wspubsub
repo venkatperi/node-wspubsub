@@ -1,0 +1,16 @@
+{
+  "wspubsub": {
+    "host": "localhost",
+    "port": 10016,
+    "path": "/",
+    "channel": {
+      "retain": 10
+    },
+    "client": {
+      "autoReconnect": true,
+      "timeout": 1000,
+      "queueIncoming": false,
+      "queueOutgoing": true
+    }
+  }
+}

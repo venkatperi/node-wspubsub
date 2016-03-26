@@ -2,24 +2,30 @@ EventEmitter = require( "events" ).EventEmitter
 Q = require 'q'
 Queue = require "node-observable-queue"
 WebSocket = require "ws"
+Log = require( "node-log" )( module, "debug" )
+conf = require "./conf"
 
 module.exports = class WSPubSubClient extends EventEmitter
 
   constructor : ( {
-  @url, @ws, @name, @autoReconnect = true, @queueIncoming = true, @queueOutgoing = true
+  @url, @ws, @name,
+  @autoReconnect = conf.get( "wspubsub:client:autoReconnect" ),
+  @queueIncoming = conf.get( "wspubsub:client:queueIncoming" ),
+  @queueOutgoing = conf.get( "wspubsub:client:queueOutgoing" ),
+  @timeout = conf.get( "wspubsub:client:timeout" )
   } ) ->
-    throw new Error "either url or connection must be defined, not both" if @url? && @ws?
-    throw new Error "missing name" unless @name?
+    throw new Error "either url or connection must be defined, not both" if (@url? && @ws?) or (!@url? and !@ws?)
+    throwError "missing name" unless @name?
 
-    @Log = require( "node-log" )( __filename )
+    @Log = require( "node-log" )( module, "debug" )
     @Log.TAG = "#{@Log.TAG} #{@name}"
-    
+
     @outgoingQueue = new Queue()
     @incomingQueue = new Queue()
 
     defer = Q.defer()
 
-    if @url || @ws.readyState != 1
+    if @url || @ws?.readyState != 1
       @ws = new WebSocket @url if @url?
       @ws.on "open", =>
         defer.resolve Q( @ws )
@@ -31,6 +37,7 @@ module.exports = class WSPubSubClient extends EventEmitter
   onOpen : =>
     @Log.i "open"
 
+    @setName @name
     @ws.on "message", ( msg ) =>
       @Log.d "received: #{msg}"
       msg = JSON.parse msg
@@ -63,7 +70,7 @@ module.exports = class WSPubSubClient extends EventEmitter
     setTimeout @startWebSocket, @timeout
 
   send : ( msg ) =>
-    @Log.d "send: #{msg}"
+#    @Log.d "send: #{msg}"
     if @queueOutgoing
       @outgoingQueue.enqueue msg
     else
@@ -88,4 +95,9 @@ module.exports = class WSPubSubClient extends EventEmitter
   publish : ( channel, message ) =>
     @Log.d "publish: #{channel} - #{message}"
     msg = command : "publish", channel : channel, message : message
+    @send msg
+
+  setName : ( name ) =>
+    @Log.d "setName: #{name}"
+    msg = command : "setname", name : name
     @send msg
