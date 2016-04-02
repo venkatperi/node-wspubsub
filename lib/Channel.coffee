@@ -5,7 +5,7 @@ module.exports = class Channel
   constructor : ( {@name, @retain} ) ->
     throw new Error "name missing" unless @name?
     @name = @name.toUpperCase()
-    @Log = require( "node-log" )( module, "debug", @name )
+    @Log = require( "yandlr" )( module : module, postfix : @name )
     @Log.i "creating channel"
 
     @retain = conf.get "wspubsub:channel:retain" unless @retain

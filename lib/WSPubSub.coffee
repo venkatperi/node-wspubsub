@@ -1,8 +1,14 @@
 WebSocket = require 'ws'
 WebSocketServer = WebSocket.Server
 Channel = require "./Channel"
-Log = require( "node-log" )( module, "debug" )
-conf = require "./conf"
+Log = require( "yandlr" ) module : module
+
+conf = null
+Log.then ->
+  conf = require "./conf"
+  conf.get "wspubsub:host"
+  .then (x) ->
+    console.log x
 
 counter = 1
 
@@ -11,7 +17,7 @@ module.exports = class WSPubSub
   constructor : ( opts = {} ) ->
     @channels = {}
     @connections = new Set()
-    
+
     for p in [ "host", "port", "path" ]
       @[ p ] = opts[ p ] or conf.get "wspubsub:#{p}"
       throw new Error "missing option: #{p}" unless @[ p ]?
@@ -21,6 +27,9 @@ module.exports = class WSPubSub
   start : =>
     Log.i "starting wspubsub server at: #{@url}"
     @server = new WebSocketServer host : @host, port : @port, path : @path
+
+    @server.on "error", ( err ) =>
+      Log.e err
 
     @server.on "connection", ( conn ) =>
       conn.__name = "unnamed-#{counter++}"
@@ -35,7 +44,7 @@ module.exports = class WSPubSub
   stop : =>
     Log.i "stopping wspubsub server"
     @server.close()
-    @server = {}
+    delete @server
 
   handle : ( conn, message ) =>
     Log.d "[#{conn.__name}] got command: #{message}"

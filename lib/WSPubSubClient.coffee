@@ -2,7 +2,7 @@ EventEmitter = require( "events" ).EventEmitter
 Q = require 'q'
 Queue = require "node-observable-queue"
 WebSocket = require "ws"
-Log = require( "node-log" )( module, "debug" )
+Log = require( "yandlr" )( module: module )
 conf = require "./conf"
 
 module.exports = class WSPubSubClient extends EventEmitter
@@ -17,7 +17,7 @@ module.exports = class WSPubSubClient extends EventEmitter
     throw new Error "either url or connection must be defined, not both" if (@url? && @ws?) or (!@url? and !@ws?)
     throwError "missing name" unless @name?
 
-    @Log = require( "node-log" )( module, "debug" )
+    @Log = require( "yandlr" )( module:module)
     @Log.TAG = "#{@Log.TAG} #{@name}"
 
     @outgoingQueue = new Queue()
@@ -60,9 +60,10 @@ module.exports = class WSPubSubClient extends EventEmitter
 
   processOutgoingQueue : =>
     while msg = @outgoingQueue.dequeue()
-      msg = JSON.stringify( msg )
-      @Log.d "sending queued msg: #{msg}"
-      @ws.send msg
+      do ( msg ) =>
+        msg = JSON.stringify( msg )
+        @Log.d "sending queued msg: #{msg}"
+        @ws.send msg
 
   reconnect : =>
     @Log.i "reconnecting in #{@timeout} ms"

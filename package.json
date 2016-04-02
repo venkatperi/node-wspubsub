@@ -4,6 +4,8 @@
   "preferGlobal": false,
   "description": "Simple nodejs WebSockets pubsub server",
   "dependencies": {
+    "hconf": "^0.2.1",
+    "node-log": "file:../node-log",
     "q": "^1.4.1",
     "ws": "^1.0.1"
   },
