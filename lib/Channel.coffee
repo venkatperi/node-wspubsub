@@ -1,4 +1,4 @@
-conf = require "./conf"
+#conf = require "./conf"
 
 module.exports = class Channel
 
@@ -8,7 +8,8 @@ module.exports = class Channel
     @Log = require( "yandlr" )( module : module, postfix : @name )
     @Log.i "creating channel"
 
-    @retain = conf.get "wspubsub:channel:retain" unless @retain
+#    @retain = conf.get "wspubsub:channel:retain" unless @retain
+    @retain = 10
     @subscriptions = new Set()
     @recent = []
 

@@ -12,5 +12,21 @@
       "queueIncoming": false,
       "queueOutgoing": true
     }
+  },
+  "yandlr": {
+    "loggers": {
+      "wspubsub": {
+        "console": {
+          "level": "debug",
+          "colorize": true
+        }
+      },
+      "wspubsub:lib/Channel": {
+        "console": {
+          "level": "info",
+          "colorize": true
+        }
+      }
+    }
   }
 }

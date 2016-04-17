@@ -1,45 +1,42 @@
 WebSocket = require 'ws'
 WebSocketServer = WebSocket.Server
-Channel = require "./Channel"
 Log = require( "yandlr" ) module : module
-
-conf = null
-Log.then ->
-  conf = require "./conf"
-  conf.get "wspubsub:host"
-  .then (x) ->
-    console.log x
+Channel = require "./Channel"
+conf = require "./conf"
+Q = require "q"
 
 counter = 1
 
 module.exports = class WSPubSub
 
-  constructor : ( opts = {} ) ->
+  constructor : ( @opts = {} ) ->
+    Log.i "test"
     @channels = {}
     @connections = new Set()
 
-    for p in [ "host", "port", "path" ]
-      @[ p ] = opts[ p ] or conf.get "wspubsub:#{p}"
-      throw new Error "missing option: #{p}" unless @[ p ]?
-
-    @url = "ws://#{@host}:#{@port}#{@path}"
-
   start : =>
-    Log.i "starting wspubsub server at: #{@url}"
-    @server = new WebSocketServer host : @host, port : @port, path : @path
+    conf.get "wspubsub"
+    .then ( wspubsub ) =>
+      for p in [ "host", "port", "path" ]
+        @[ p ] = @opts[ p ] or wspubsub[ p ] or throw "missing option: #{p}"
 
-    @server.on "error", ( err ) =>
-      Log.e err
+      @url = "ws://#{@host}:#{@port}#{@path}"
 
-    @server.on "connection", ( conn ) =>
-      conn.__name = "unnamed-#{counter++}"
-      Log.d "[#{conn.__name}] connection opened"
+      Log.i "starting wspubsub server at: #{@url}"
+      @server = new WebSocketServer host : @host, port : @port, path : @path
 
-      conn.on "message", ( message ) =>
-        try
-          @handle conn, message
-        catch err
-          Log.e "error: #{err}"
+      @server.on "error", ( err ) =>
+        Log.e err
+
+      @server.on "connection", ( conn ) =>
+        conn.__name = "unnamed-#{counter++}"
+        Log.d "[#{conn.__name}] connection opened"
+
+        conn.on "message", ( message ) =>
+          try
+            @handle conn, message
+          catch err
+            Log.e "error: #{err}"
 
   stop : =>
     Log.i "stopping wspubsub server"

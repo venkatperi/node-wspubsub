@@ -1,15 +1,18 @@
 should = require( "should" )
 assert = require( "assert" )
-WSPubSub = require '../'
+WSPubSub = require '../index'
 WebSocket = require "ws"
 
-server = {}
+server = undefined
 
 describe "WSPubSub", ->
 
-  it "start the server", ->
+  it "start the server", (done) ->
     server = new WSPubSub()
     server.start()
+    .then ->
+      setTimeout done, 500
+    .fail done
 
   it "client 1 can subscribe to a channel", ( done ) ->
     client1 = new WebSocket server.url

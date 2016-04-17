@@ -9,10 +9,10 @@ module.exports = class WSPubSubClient extends EventEmitter
 
   constructor : ( {
   @url, @ws, @name,
-  @autoReconnect = conf.get( "wspubsub:client:autoReconnect" ),
-  @queueIncoming = conf.get( "wspubsub:client:queueIncoming" ),
-  @queueOutgoing = conf.get( "wspubsub:client:queueOutgoing" ),
-  @timeout = conf.get( "wspubsub:client:timeout" )
+  @autoReconnect = conf.get( "wspubsub.client.autoReconnect" ),
+  @queueIncoming = conf.get( "wspubsub.client.queueIncoming" ),
+  @queueOutgoing = conf.get( "wspubsub.client.queueOutgoing" ),
+  @timeout = conf.get( "wspubsub.client.timeout" )
   } ) ->
     throw new Error "either url or connection must be defined, not both" if (@url? && @ws?) or (!@url? and !@ws?)
     throwError "missing name" unless @name?

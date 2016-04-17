@@ -1,5 +1,8 @@
-hconf = require 'hconf'
+hconf = require( 'hconf' ) module : module
+module.exports = hconf
 
-module.exports = hconf module : module
+#hconf.get "wspubsub"
+#.then ->
+#  console.log JSON.stringify hconf.provider.sources, null, 2
 
 
