@@ -1,6 +1,6 @@
 {
   "name": "wspubsub",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "preferGlobal": false,
   "description": "Simple nodejs WebSockets pubsub server",
   "dependencies": {
